@@ -1,0 +1,774 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+	<title>Don't go back home alone!</title>   
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a1/jquery.mobile-1.0a1.min.css" />  
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.min.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/mobile/1.0a4/jquery.mobile-1.0a4.min.js"></script>
+	<script src="jquery.cookie.js"></script>
+	
+	<style>
+	
+		#categoriesIcon li
+		{
+		display: inline;
+		list-style-type: none;
+		padding-right: 5px;
+		}
+	
+	</style>
+	
+	<script>
+
+		function recupMonth(month){
+			if (month <10){
+				return "0"+month;
+			}else{
+				return ""+month;
+			}
+		}
+		var COOKIE_NAME = "bgfsq_token";
+		var FSQ_URI = "https://api.foursquare.com/v2/";
+		var access_token; // = "OXUGZTZHVWBLSDJZYLKUEQTAUZKECXKYYCB4YRMQIY2NI441";
+
+		var venueList = [];
+		var date_du_jour = new Date();		
+		var version = date_du_jour.getFullYear().toString() + recupMonth((date_du_jour.getMonth()+1)) + date_du_jour.getDate().toString();
+		var userID = 23153; // id de l'utilisateur de l'application 3532684 - 7536648
+		//var profileID = 9310907;  id du profil visualisé par l'utilisateur 4121368 - 7654
+		var venueDetails = [];
+		//check authentification
+		
+		if($.cookie(COOKIE_NAME)!=null){
+			access_token = $.cookie(COOKIE_NAME);
+		}else {
+			window.location = "index.html";
+		}
+		
+
+		$(document).ready(function(){
+			getCoords();
+		});
+		
+		function getCoords() {		
+			if (navigator.geolocation){
+				navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+			}else{
+				$("#results").html("Votre navigateur ne prend pas en compte la géolocalisation HTML5");
+			}
+
+			function successCallback(position){
+				loadPubsFromFourSquare(position.coords);			
+			}; 
+
+			function errorCallback(error){
+				switch(error.code){
+				    case error.PERMISSION_DENIED:
+				      $("#results").html("L'utilisateur n'a pas autorisé l'accès à sa position");
+				      break;
+				    case error.POSITION_UNAVAILABLE:
+				      $("#results").html("L'emplacement de l'utilisateur n'a pas pu être déterminé");
+				      break;
+				    case error.TIMEOUT:
+				      $("#results").html("Le service n'a pas répondu à temps");
+				      break;
+				    }
+			};
+				
+		}
+
+		function loadPubsFromFourSquare(coords) {
+			venueDetails.length = 0;
+		
+			 $.ajax({
+			    type: "GET",
+			    url: FSQ_URI+"venues/search?ll="+coords.latitude+","+coords.longitude
+					+"&categoryId=4d4b7105d754a06376d81259&oauth_token="+access_token+"&v="+version,
+			    data: "",
+			    dataType: "json",
+			    success: loadSuccess,
+			    error: loadError
+			  });
+
+			function loadSuccess(jsonData) {
+
+				$("#places").empty();
+				var sortVenues = jsonData.response.venues.sort(function(a, b){
+					return b.hereNow.count-a.hereNow.count
+				});
+				$(sortVenues).each(function(i, e) {
+					venueList[e.id] = e;
+					$("#places").append("<li venue-id='" + e.id 
+								+ "' id='gotoDetailLocalisation" + i + "' " + " venue-name='" + e.name + "'" 
+								+ " venue-address='" + e.location.address + " " + e.location.city + "'"
+								+ " venue-distance='" + e.location.distance + "'"
+								+ "><a>"
+								+ e.name 
+								+ "<div id='gender"+e.id+"'></div></a></li>");					
+					$("#gotoDetailLocalisation" + i).click(function() {
+						displayDetailLocalisation($(this).attr("venue-id"), $(this).attr("venue-name"), $(this).attr("venue-address"), $(this).attr("venue-distance") );
+					});
+					loadDetailLocalisation(e.id);
+				});
+				$("#places").listview('refresh');
+			}
+	
+			function loadError(result) {
+				if (result.status == 200 && result.statusText == "OK") {
+    					loadSuccess(result.responseText);
+  				}else {
+    					alert("FAILED : " + result.status + ' ' + result.statusText);
+  				}
+			};
+		}
+		
+		function loadDetailLocalisation(venueId){
+			$.ajax({
+			    type: "GET",
+			    url: FSQ_URI+"venues/" + venueId + "/herenow?oauth_token="+access_token,
+			    data: "",
+			    dataType: "json",
+			    success: loadSuccess,
+			    error: loadError
+			  });
+			
+			function loadSuccess(jsonData) {
+				var nbMale = 0;
+				$(jsonData.response.hereNow.items).each(function(i, e) {
+					if(e.user.gender === 'male'){
+						nbMale++;
+					}
+				});
+				venueDetails[venueId] = jsonData;
+				//update list
+				$("#gender"+venueId).append("<img src='images/fi.png'>"
+					+(jsonData.response.hereNow.count-nbMale)
+					+" - "
+					+"<img src='images/mi.png'>"
+					+nbMale);
+				$("#places").listview('refresh'); 
+			}	
+			function loadError(result) {
+				if (result.status == 200 && result.statusText == "OK") {
+    					loadSuccess(result.responseText);
+  				}else {
+    					alert("FAILED : " + result.status + ' ' + result.statusText);
+  				}
+			};
+		}
+
+		function displayDetailLocalisation(venueId, venueName, venueAddress, venueDistance) {
+			
+			
+			$("#venueName").empty();
+			$("#venueName").append("<h2>" + venueName + "</h2>");
+			$("#venueAddress").empty();
+			$("#venueAddress").append("<h3>" + venueList[venueId].location.address + " " + venueList[venueId].location.city + "</h3>");
+			$("#venueDistance").empty();
+			$("#venueDistance").append("<h4>" + venueDistance + " m</h4>");
+			
+			$("#categoriesIcon").empty();
+			$(venueList[venueId].categories).each(function (i, e) {
+				$("#categoriesIcon").append("<li><img src='" + e.icon + "'/></li>");
+			});
+			
+			function feedList(jsonObj){
+				$("#peopleAtLocation").append("<li data-role='list-divider' id='girls'>Girls</li>");
+				$(jsonObj.response.hereNow.items).each(function(i, e) {	
+					if (e.user.gender == "female") {
+						$("#peopleAtLocation").append("<li id='girls"+i+"' user-id='" + e.user.id + "'>" 
+								+ "<a id='user" + i + "' >" 
+								+ e.user.firstName 
+								+ "<img width='80px' height='80px' src='" + e.user.photo + "'/>"
+								+ "</a>"
+								+ "</li>");
+						$("#girls" + i).click(function() {
+							$.mobile.changePage( "#profilePage" );
+							chargerDetailProfile($(this).attr("user-id"));
+						});
+					}
+				});
+				$("#peopleAtLocation").append("<li data-role='list-divider' id='boys'>Boys</li>");
+				$(jsonObj.response.hereNow.items).each(function(i, e) {	
+					if (e.user.gender == "male") {
+						$("#peopleAtLocation").append("<li id='boys"+i+"' user-id='" + e.user.id + "'>" 
+								+ "<a user-id='" + e.user.id + "' id='user" + i + "' >" 
+								+ e.user.firstName 
+								+ "<img width='80px' height='80px' src='" + e.user.photo + "'/>"
+								+ "</a>"
+								+ "</li>");
+						$("#boys" + i).click(function() {
+							$.mobile.changePage( "#profilePage" );
+							chargerDetailProfile($(this).attr("user-id"));
+						});
+						
+					}
+				});
+				
+				$("#peopleAtLocation").listview('refresh');
+			}
+
+			$("#peopleAtLocation").empty();
+			$("#barName").text(venueName);
+			$.mobile.changePage( "#barDetails" );
+			if(venueDetails[venueId]!=null){
+				feedList(venueDetails[venueId]);
+			}else{
+				$.ajax({
+				    type: "GET",
+				    url: FSQ_URI+"venues/" + venueId + "/herenow?oauth_token="+access_token,
+				    data: "",
+				    dataType: "json",
+				    success: loadSuccess,
+				    error: loadError
+				  });
+				function loadSuccess(jsonData) {
+					feedList(jsonData);
+				}	
+				function loadError(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+    						feedList(result.responseText);
+						
+	  				}else {
+	    					alert("FAILED : " + result.status + ' ' + result.statusText);
+	  				}
+				}
+			}
+		}
+
+		function chargerDetailProfile(profileID) {
+			var profileFirstName;
+			var profileLastName;
+			var profileMayorships;
+			var profileDones;
+			var profileTips;
+			var profileFriends;
+			
+			var userMayorships;
+			var userDones;
+			var userTodos;
+			var userTips;
+			var userFriends;
+			
+			var errorProfileDones = false;;
+			var errorUserDones = false;
+			var errorProfileMayorships = false;
+			var errorUserMayorships = false;
+			var errorUserTodos = false;
+			var errorProfileTips = false;
+			var errorProfileFriends = false;
+			var errorUserFriends = false;
+			
+			var nbProfileDonesUserTips = 0;		// nb de Tips de l'utilsiateur faits par le profil observé
+			var profileDonesUserTips = "";		// texte à afficher pour les Tips de l'utilisateur faits par le profil observé
+			
+			var nbUserDonesProfileTips = 0; 	// nb de Tips du profil observé faits par l'utilisateur
+			var userDonesProfileTips = ""; 		// texte à afficher pour les Tips du profil observé faits par l'utilisateur
+			
+			var nbUserDonesProfileDones = 0;	// nb de Tips faits à la fois par l'utilisateur et le profil observé
+			var userDonesProfileDones = "";		// texte à afficher pour les Tips faits à la fois par l'utilisateur et le profil observé
+			
+			var nbUserTodosProfileTips = 0;	// nb de Todos de l'utilisateur sur un Tip du profil observé
+			var userTodosProfileTips = "";		// texte à afficher pour les Todos de l'utilisateur sur un Tip du profil observé
+			
+			var nbUserTodosProfileDones = 0;	// nb de Todos de l'utilisateur sur un tip déjà fait par le profil observé
+			var userTodosProfileDones = "";		// texte à afficher pour les Todos de l'utilisateur sur un tip déjà fait par le profil observé
+			
+			var nbMutualFollowing = 0;				// nb de pages suivies en commun
+			var mutualFollowing = "";					// texte à afficher dans le bloc des pages suivies en commun
+			
+			var nbMutualFriends = 0;
+			var mutualFriends = "";
+			
+			
+			
+			$("#profilePic").empty();
+			$("#profileInfos").empty();
+			$("#profileNetworks").empty();
+			$("#mutualFriendsList").empty();
+			$("#mutualPlacesList").empty();
+			$("#mutualBadgesList").empty();
+			
+
+
+			$.ajax({
+				type: "GET",
+				url: FSQ_URI+"users/" + profileID + "?oauth_token=" + access_token +"&v="+version,
+				data: "",
+				dataType: "json",
+				success: loadSuccessProfileDetails,
+				error: loadErrorProfileDetails
+			});
+			function loadSuccessProfileDetails(jsonData) {
+				/* Affichage de profileDetails */
+				
+				// affichage de profilePic
+				$("#profilePic").append('<img src="'+ jsonData.response.user.photo + '"height="120px">');
+				
+				// affichage du nom
+				if(profileFirstName = jsonData.response.user.firstName){
+					if(profileLastName = jsonData.response.user.lastName) {
+						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + ' ' + profileLastName + '</h2><br>');
+						$("#profilePageTitle").append(profileFirstName + ' ' + profileLastName);
+					} else {
+						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + '</h2><br>');
+						$("#profilePageTitle").append(profileFirstName);
+					}
+				} else {
+					$("#profileInfos").append('<h2 class="name">'+ profileLastName + '</h2><br>');
+					$("#profilePageTitle").append(profileLastName);
+				}
+				
+				// affichage de la ville
+				if (jsonData.response.user.homeCity) {
+					$("#profileInfos").append(jsonData.response.user.homeCity + '<br>');
+				}
+				
+				// affichage du sexe
+				if (jsonData.response.user.gender) {
+					var profileGender = jsonData.response.user.gender;
+					var capProfileGender = profileGender.substr(0, 1).toUpperCase();
+					profileGender = capProfileGender + profileGender.substr(1, profileGender.length-1);
+					$("#profileInfos").append(profileGender);
+				}
+
+				// affichage des comptes twitter et facebook
+				if(jsonData.response.user.contact.twitter) {
+					$("#profileNetworks").append('<li class="twitter"><a href="http://twitter.com/'+ jsonData.response.user.contact.twitter + '">Twitter</a></li>');
+				}
+				if(jsonData.response.user.contact.facebook) {
+					$("#profileNetworks").append('<li class="facebook"><a href="http://facebook.com/'+ jsonData.response.user.contact.facebook + '">Facebook</a></li>');
+				}
+				
+				
+				/* Affichage des Mutual Friends */
+				
+				if (jsonData.response.user.friends.groups[0].type == "friends") {
+					$(jsonData.response.user.friends.groups[0].items).each(function(i, e) {
+						nbMutualFriends ++;
+						mutualFriends = mutualFriends + '<li><img src="' + e.photo + '" height="40px"></li>';
+					});
+				}
+				if(nbMutualFriends >= 1) {
+					$("#mutualFriendsList").append(mutualFriends);
+				} else {
+					$("#mutualFriendsList").append("You don't have any friend in common with" + profileFirstName);
+				}
+				
+			}
+			function loadErrorProfileDetails(result) {
+				if (result.status == 200 && result.statusText == "OK") {
+			  	loadSuccessProfileDetails(result.responseText);
+			  }else {
+			  	alert("FAILED : " + result.status + ' ' + result.statusText);
+			  }
+			};
+
+	
+				
+				
+				/* Affichage des Mutual Places */
+			
+			
+				// recup des choses faites par le profil observé
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"lists/" + profileID + "/dones" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessProfileDones,
+					error: loadErrorProfileDones
+				});
+				function loadSuccessProfileDones(jsonData) {
+					profileDones = jsonData;
+				}
+				function loadErrorProfileDones(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessProfileDones(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorProfileDones = true;
+				  }
+				};				
+				
+				
+				// recup des choses faites par l'utilisateur
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"lists/" + userID + "/dones" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessUserDones,
+					error: loadErrorUserDones
+				});
+				function loadSuccessUserDones(jsonData) {
+					userDones = jsonData;
+				}
+				function loadErrorUserDones(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessUserDones(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorUserDones = true;
+				  }
+				};
+				
+				// recup des mayorships du profil observé
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"users/" + profileID + "/mayorships" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessProfileMayors,
+					error: loadErrorProfileMayors
+				});
+				function loadSuccessProfileMayors(jsonData) {
+					profileMayorships = jsonData;
+				}
+				function loadErrorProfileMayors(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessProfileMayors(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorProfileMayorships = true;
+				  }
+				};
+				
+				
+				// recup des mayorships de l'utilisateur
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"users/" + userID + "/mayorships" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessUserMayors,
+					error: loadErrorUserMayors
+				});
+				function loadSuccessUserMayors(jsonData) {
+					userMayorships = jsonData;
+				}
+				function loadErrorUserMayors(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessUserMayors(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorUserMayorships = true;
+				  }
+				};
+				
+				// recup des todos de l'utilisateur
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"lists/" + userID + "/todos" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessUserTodos,
+					error: loadErrorUserTodos
+				});
+				function loadSuccessUserTodos(jsonData) {
+					userTodos = jsonData;
+				}
+				function loadErrorUserTodos(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessUserTodos(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorUserTodos = true;
+				  }
+				};
+				
+				// recup des tips du profil observé
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"lists/" + profileID + "/tips" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessProfileTips,
+					error: loadErrorProfileTips
+				});
+				function loadSuccessProfileTips(jsonData) {
+					profileTips = jsonData;
+				}
+				function loadErrorProfileTips(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessProfileTips(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorProfileTips = true;
+				  }
+				};
+				
+				
+				// recup des amis du profil observé
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"users/" + profileID + "/friends" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessProfileFriends,
+					error: loadErrorProfileFriends
+				});
+				function loadSuccessProfileFriends(jsonData) {
+					profileFriends = jsonData;
+				}
+				function loadErrorProfileFriends(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessProfileFriends(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorProfileFriends = true;
+				  }
+				};
+				
+				// recup des amis de l'utilisateur
+				$.ajax({
+					type: "GET",
+					url: FSQ_URI+"users/" + userID + "/friends" + "?oauth_token=" + access_token+"&v="+version,
+					data: "",
+					dataType: "json",
+					success: loadSuccessUserFriends,
+					error: loadErrorUserFriends
+				});
+				function loadSuccessUserFriends(jsonData) {
+					userFriends = jsonData;
+				}
+				function loadErrorUserFriends(result) {
+					if (result.status == 200 && result.statusText == "OK") {
+				  	loadSuccessUserFriends(result.responseText);
+				  }else {
+				  	alert("FAILED : " + result.status + ' ' + result.statusText);
+						errorUserFriends = true;
+				  }
+				};
+				
+				
+
+
+				alert("WAIT");
+
+
+
+
+				// affichage des tips laissés par l'utilisateur et faits par le profil observé
+				if(!errorProfileDones){
+					if(profileDones.response.list.listItems.count) { 		//pas de traitement si aucun élément dans les dones
+						$(profileDones.response.list.listItems.items).each(function(i, e) {
+							if(e.tip){
+								if(e.tip.user.id == userID) {
+									nbProfileDonesUserTips ++;
+									profileDonesUserTips = profileDonesUserTips + '<li>At ' + e.venue.name + ' : <br> <span class="tip_text">' + e.tip.text + '</span>' + '</li>';
+								}
+							}
+						});
+					}
+				}
+				
+				// affichage des tips laissés par le profil observé et fait par l'utilisateur
+				if(!errorUserDones){
+					if(userDones.response.list.listItems.count) { 		//pas de traitement si aucun élément dans les dones
+						$(userDones.response.list.listItems.items).each(function(i, e) {
+							if(e.tip){
+								if(e.tip.user.id == profileID) {
+									nbUserDonesProfileTips ++;
+									userDonesProfileTips = userDonesProfileTips + '<li>At ' + e.venue.name + ' : <br> <span class="tip_text">' + e.tip.text + '</span>' + '</li>';
+								}
+							}
+						});
+					}
+				}
+				
+				// affichage des tips effectués communs entre l'utilisateur et le profil observé
+				if(!(errorProfileDones || errorUserDones)) {
+					if(userDones.response.list.listItems.count && profileDones.response.list.listItems.count) { 		//pas de traitement si aucun élément dans les dones
+						$(userDones.response.list.listItems.items).each(function(i, e) {
+							if(e.tip){
+								$(profileDones.response.list.listItems.items).each(function(j, f) {
+									if(f.tip){
+										if(e.tip.id == f.tip.id){
+											if(!(e.tip.user.id == profileID)) {
+												nbUserDonesProfileDones ++;
+												userDonesProfileDones = userDonesProfileDones + '<li>At ' + e.venue.name + ' : <br> <span class="tip_text">' + e.tip.text + '</span>' + '</li>';
+											}
+											return false;
+										}
+									}
+								});
+							}
+						});
+					}
+				}
+				
+				// affichage des todos de l'utilisateur sur un tip laissé par le profil observé
+				if(!errorUserTodos) {
+					if(userTodos.response.list.listItems.count) { 		//pas de traitement si aucun élément dans les todos de l'utilisateur
+						$(userTodos.response.list.listItems.items).each(function(i, e) {
+							if(e.tip){
+								if(e.tip.user.id == profileID) {
+									nbUserTodosProfileTips ++;
+									userTodosProfileTips = userTodosProfileTips + '<li>At ' + e.venue.name + ' : <br> <span class="tip_text">' + e.tip.text + '</span>' + '</li>';
+								} else {
+									if(!errorProfileDones) {
+										if(profileDones.response.list.listItems.count) { 		//pas de traitement si aucun élément dans les dones
+											$(profileDones.response.list.listItems.items).each(function(j, f) {
+												if(f.tip){
+													if(e.tip.id == f.tip.id){
+														nbUserTodosProfileDones ++;
+														userTodosProfileDones = userTodosProfileDones + '<li>At ' + e.venue.name + ' : <br> <span class="tip_text">' + e.tip.text + '</span>' + '</li>';
+														return false;
+													}
+												}
+											});
+										}									
+									}
+								}
+							}
+						});
+					}
+				}
+
+				// affichage des pages suivies en commun
+				if(!(errorProfileFriends || errorUserFriends)) {
+					if(userFriends.response.friends.count && profileFriends.response.friends.count) { 		//pas de traitement si aucun élément dans les amis
+						$(userFriends.response.friends.items).each(function(i, e) {
+							if(e.relationship && e.relationship=="followingThem"){
+								$(profileFriends.response.friends.items).each(function(j, f) {
+									if(f.relationship && f.relationship=="followingThem"){
+										if(e.id == f.id){
+											nbMutualFollowing ++;
+											mutualFollowing = mutualFollowing + '<li><img src="' + e.photo + '"></li>';
+											return false;
+										}
+									}
+								});
+							}
+						});
+					}
+				}
+
+
+
+				if ((nbProfileDonesUserTips >= 1) || (nbUserDonesProfileTips >= 1) || (nbUserDonesProfileDones >= 1) || 
+				(nbUserTodosProfileTips >= 1) ||(nbUserTodosProfileDones >= 1)) {
+						if(nbProfileDonesUserTips > 1) {
+							profileDonesUserTips = '<li>' + profileFirstName + ' did tips you left : <ul>' + profileDonesUserTips + '</ul></li>';
+						} else if(nbProfileDonesUserTips == 1) {
+							profileDonesUserTips = '<li>' + profileFirstName + ' did a tip you left : <ul>' + profileDonesUserTips + '</ul></li>';
+						}
+						
+						if(nbUserDonesProfileTips > 1) {
+							userDonesProfileTips = '<li>You did tips ' + profileFirstName + ' left : <ul>' + userDonesProfileTips + '</ul></li>';
+						} else if(nbUserDonesProfileTips == 1) {
+							userDonesProfileTips = '<li>You did a tip ' + profileFirstName + ' left : <ul>' + userDonesProfileTips + '</ul></li>';
+						}
+						
+						if(nbUserDonesProfileDones > 1) {
+							userDonesProfileDones = '<li>You and ' + profileFirstName + ' did the same tips : <ul>' + userDonesProfileDones + '</ul></li>';
+						} else if(nbUserDonesProfileDones == 1) {
+							userDonesProfileDones = '<li>You and ' + profileFirstName + ' did the same tip : <ul>' + userDonesProfileDones + '</ul></li>';
+						}
+						
+						if(nbUserTodosProfileTips > 1) {
+							userTodosProfileTips = '<li>You want to do tips ' + profileFirstName + ' left : <ul>' + userTodosProfileTips + '</ul></li>';
+						} else if(nbUserTodosProfileTips == 1) {
+							userTodosProfileTips = '<li>You want to do a tip ' + profileFirstName + ' left : <ul>' + userTodosProfileTips + '</ul></li>';
+						}
+						
+						if(nbUserTodosProfileDones > 1) {
+							userTodosProfileDones = '<li>You want to do tips ' + profileFirstName + ' has already done : <ul>' + userTodosProfileDones + '</ul></li>';
+						} else if(nbUserTodosProfileDones == 1) {
+							userTodosProfileDones = '<li>You want to do a tip ' + profileFirstName + ' has already done : <ul>' + userTodosProfileDones + '</ul></li>';
+						}
+						
+						$("#mutualPlacesList").append(profileDonesUserTips);
+						$("#mutualPlacesList").append(userDonesProfileTips);
+						$("#mutualPlacesList").append(userDonesProfileDones);
+						$("#mutualPlacesList").append(userTodosProfileTips);
+						$("#mutualPlacesList").append(userTodosProfileDones);
+				} else {
+					$("#mutualPlacesList").append("You don't have any places in commun with "+profileFirstName);
+				}
+				
+				
+				/* Affichage des Mutual Followed */
+				
+				if(nbMutualFollowing >= 1) {
+					$("#mutualFollowingList").append(mutualFollowing);
+				} else {
+					$("#mutualFollowingList").append("You don't follow any page in common with" + profileFirstName);
+				}
+		}
+	</script>
+</head>
+<body>
+	
+	<div data-role="page" id="listBars" data-title="Venue list">
+		<div data-role="header">
+			<h1>Venues</h1>
+		</div>
+		<div data-role="content" id="contentCategories">
+   			<ul data-role="listview" data-split-icon="delete" data-split-theme="d" id="places">
+   			</ul>
+			
+			<p id="results">			
+			</p>
+		</div>
+	</div>
+
+
+	<div data-role="page" id="barDetails" data-title="People here">
+
+		<div data-role="header">
+			<h1>People in "<span id="barName"></span>"</h1>
+		</div>
+
+		<div data-role="content">
+			<ul id="categoriesIcon"></ul>
+			<span style="width=100%;" id="venueName"></span>
+			<span style="width=100%;" id="venueAddress"></span>
+			<span style="width=100%;" id="venueDistance"></span>	
+   			<ul data-role="listview" data-split-icon="delete" data-split-theme="d" id="peopleAtLocation"></ul>
+		</div>
+
+	</div>
+
+	<div data-role="page" id="profilePage">
+		<div data-role="header">
+			<h1 id="profilePageTitle"></h1>
+		</div>
+
+		<div data-role="content">
+			<div id="profileDetails">
+				<div id="profilePic">
+				</div>
+				<div id="profileInfosNets">
+					<div id="profileInfos">
+				
+					</div>
+					<ul id="profileNetworks">
+			
+					</ul>
+				</div>
+			</div>
+			<div id="mutualFriends">
+				<h2>Friends in common</h2>
+				<ul id="mutualFriendsList">
+				</ul>	
+			</div>
+			<div id="mutualPlaces">
+				<h2>Places in common</h2>
+				<ul id="mutualPlacesList">
+				</ul>
+			</div>
+			<div id="mutualFollowing">
+				<h2>Followed pages in common</h2>
+				<ul id="mutualFollowingList">
+				</ul>
+			</div>
+		</div>
+		<div data-role="footer">
+				<h4>fstalk2her</h4>
+		</div>
+	</div>
+</body>
+</html>

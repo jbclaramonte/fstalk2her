@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+	<title>Don't go back home alone!</title>   
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a1/jquery.mobile-1.0a1.min.css" />
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.min.js"></script> 
+	<script type="text/javascript" src="http://code.jquery.com/mobile/1.0a4/jquery.mobile-1.0a4.min.js"></script> 
+	<script src="jquery.cookie.js"></script>
+	
+	<script>
+		var CLIENT_ID = "KUWP5OSHYCJH33SBZHW2WTM3KSPI3SWO2XB4THBIXEMKAM53";
+		var YOUR_REGISTERED_REDIRECT_URI = "http://yakafokon.github.com/fstalk2her/";
+		var COOKIE_NAME = "bgfsq_token";
+		var access_token;
+		
+
+		function auth(){
+			var hash = document.location.hash;
+			String.prototype.startsWith = function (str){
+			    return this.indexOf(str) == 0;
+			};
+			if($.cookie(COOKIE_NAME)!=null){
+				window.location = "main.html";
+			}else if(hash.startsWith("#access_token=")){
+				$.cookie(COOKIE_NAME,hash.substring(14));
+				window.location = "main.html";
+			}else{
+				window.location = "https://foursquare.com/oauth2/authenticate?client_id="+CLIENT_ID
+					+"&response_type=token&redirect_uri="+YOUR_REGISTERED_REDIRECT_URI;
+			}
+		}
+
+		$(document).ready(function(){
+			$('#launchBgfsq').click(auth);
+		});
+
+	</script>
+</head>
+<body>
+	<div data-role="page" data-theme="b" id="home">
+		<div data-role="content">
+			<a id="launchBgfsq" href="" data-role="button" data-inline="true">Discover </a>  
+	
+		</div>
+	</div>
+</body>
+</html>

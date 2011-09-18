@@ -1,0 +1,103 @@
+h2, h3 {
+	padding: 0;
+	margin: 0;
+}
+ul {
+	list-style-type:none;
+}
+
+#profilePage {
+	
+}
+#profilePage .ui-content {
+	padding-left: 10px;
+	padding-right: 10px;
+	margin: auto;
+}
+#profilePage .ui-content #profileDetails {
+	background-color: #cbcbcb;
+	padding: 15px;
+	height: 132px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+#profilePage .ui-content #profileDetails #profilePic{
+	width: 120px;
+	background-color: white;
+	padding: 5px;
+	border: 1px solid #161616;
+	float: left;
+}
+#profilePage .ui-content #profileDetails #profileInfosNets{
+	float: left;
+	margin-left: 20px
+}
+#profilePage .ui-content #profileDetails #profileInfosNets #profileInfos {
+	margin-top: 10px;
+}
+#profilePage .ui-content #profileDetails #profileInfosNets #profileNetworks {
+	margin: 10px 0 0;
+	padding : 0;
+}
+
+#profilePage .ui-content #profileDetails #profileInfosNets #profileNetworks li {
+	float:  left;
+	width: 32px;
+	height: 32px;
+	margin-right: 5px;
+}
+#profilePage .ui-content #profileDetails #profileInfosNets #profileNetworks li.facebook {
+	background-image: url(facebook_32.png);
+}
+#profilePage .ui-content #profileDetails #profileInfosNets #profileNetworks li.twitter {
+	background-image: url(twitter_32.png);
+}
+
+
+
+#mutualFriends {
+	margin-top: 20px;
+	background-color: #cbcbcb;
+	padding: 15px;
+	height:  auto;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+#mutualFriends h2{
+	margin-bottom: 10px
+}
+#mutualFriends #mutualFriendsList {
+	margin:  0;
+	padding:  0;	
+}
+#mutualFriends #mutualFriendsList li {
+	display: inline-block;
+	margin-right: 5px;
+	margin-top: 5px;
+	height: 40px;
+}
+
+#mutualPlaces {
+	margin-top: 20px;
+	background-color: #cbcbcb;
+	padding: 15px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+#mutualPlaces {
+	margin-top: 20px;
+	background-color: #cbcbcb;
+	padding: 15px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+
+
+#mutualFollowing {
+	margin-top: 20px;
+	background-color: #cbcbcb;
+	padding: 15px;
+	-moz-border-radius: 10px;
+	border-radius: 10px;
+}
+
