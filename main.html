@@ -335,10 +335,10 @@
 
 				// affichage des comptes twitter et facebook
 				if(jsonData.response.user.contact.twitter) {
-					$("#profileNetworks").append('<li class="twitter"><a href="http://twitter.com/'+ jsonData.response.user.contact.twitter + '">Twitter</a></li>');
+					$("#profileNetworks").append('<li class="twitter"><a href="http://twitter.com/'+ jsonData.response.user.contact.twitter + '"><img src="twitter_32.png" width="32" height="32" alt="Twitter"></a></li>');
 				}
 				if(jsonData.response.user.contact.facebook) {
-					$("#profileNetworks").append('<li class="facebook"><a href="http://facebook.com/'+ jsonData.response.user.contact.facebook + '">Facebook</a></li>');
+					$("#profileNetworks").append('<li class="facebook"><a href="http://facebook.com/'+ jsonData.response.user.contact.facebook + '"><img src="facebook_32.png" width="32" height="32" alt="Facebook"></a></li>');
 				}
 				
 				
@@ -636,7 +636,7 @@
 									if(f.relationship && f.relationship=="followingThem"){
 										if(e.id == f.id){
 											nbMutualFollowing ++;
-											mutualFollowing = mutualFollowing + '<li><img src="' + e.photo + '"></li>';
+											mutualFollowing = mutualFollowing + '<li><img src="' + e.photo + '" height="40px"></li>';
 											return false;
 										}
 									}
@@ -695,7 +695,7 @@
 				if(nbMutualFollowing >= 1) {
 					$("#mutualFollowingList").append(mutualFollowing);
 				} else {
-					$("#mutualFollowingList").append("You don't follow any page in common with" + profileFirstName);
+					$("#mutualFollowingList").append("You don't follow any page in common with " + profileFirstName);
 				}
 		}
 	</script>
