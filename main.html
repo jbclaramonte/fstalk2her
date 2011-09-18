@@ -52,6 +52,28 @@
 			getCoords();
 		});
 		
+		function loadUserID(){
+			$.ajax({
+			    type: "GET",
+			    url: FSQ_URI+"users/self?oauth_token="+access_token,
+			    data: "",
+			    dataType: "json",
+			    success: loadSuccessUserID,
+			    error: loadErrorUserID
+			  });
+			
+			function loadSuccessUserID(jsonData) {
+				userID = jsonData.response.user.id; 
+			}	
+			function loadErrorUserID(result) {
+				if (result.status == 200 && result.statusText == "OK") {
+	    				loadSuccessUserID(result.responseText);
+	  			}else {
+	    				alert("FAILED : " + result.status + ' ' + result.statusText);
+	  			}
+			};
+		}
+
 		function getCoords() {		
 			if (navigator.geolocation){
 				navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
@@ -60,7 +82,8 @@
 			}
 
 			function successCallback(position){
-				loadPubsFromFourSquare(position.coords);			
+				loadUserID();
+				loadPubsFromFourSquare(position.coords);		
 			}; 
 
 			function errorCallback(error){
