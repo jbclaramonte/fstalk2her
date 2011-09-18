@@ -347,14 +347,14 @@
 				if(profileFirstName = jsonData.response.user.firstName){
 					if(profileLastName = jsonData.response.user.lastName) {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + ' ' + profileLastName + '</h2><br>');
-						$("#profilePageTitle").append("<h1 >"+profileFirstName + ' ' + profileLastName+"</h1>");
+						$("#profilePageTitle").html("<h1 >"+profileFirstName + ' ' + profileLastName+"</h1>");
 					} else {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + '</h2><br>');
-						$("#profilePageTitle").append("<h1 >"+profileFirstName+"</h1>");
+						$("#profilePageTitle").html("<h1 >"+profileFirstName+"</h1>");
 					}
 				} else {
 					$("#profileInfos").append('<h2 class="name">'+ profileLastName + '</h2><br>');
-					$("#profilePageTitle").append("<h1 >"+profileLastName+"</h1>");
+					$("#profilePageTitle").html("<h1 >"+profileLastName+"</h1>");
 				}
 				
 				// affichage de la ville
