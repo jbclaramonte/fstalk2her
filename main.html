@@ -318,7 +318,7 @@
 			$("#mutualFriendsList").empty();
 			$("#mutualPlacesList").empty();
 			$("#mutualFollowingList").empty();
-			$("#profilePageTitle").append("");
+			$("#profilePageTitle").html(" ");
 
 			
 			function launchDisplay(){
@@ -347,14 +347,14 @@
 				if(profileFirstName = jsonData.response.user.firstName){
 					if(profileLastName = jsonData.response.user.lastName) {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + ' ' + profileLastName + '</h2><br>');
-						$("#profilePageTitle").append(profileFirstName + ' ' + profileLastName);
+						$("#profilePageTitle").html(profileFirstName + ' ' + profileLastName);
 					} else {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + '</h2><br>');
-						$("#profilePageTitle").append(profileFirstName);
+						$("#profilePageTitle").html(profileFirstName);
 					}
 				} else {
 					$("#profileInfos").append('<h2 class="name">'+ profileLastName + '</h2><br>');
-					$("#profilePageTitle").append(profileLastName);
+					$("#profilePageTitle").html(profileLastName);
 				}
 				
 				// affichage de la ville
