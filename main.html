@@ -104,11 +104,11 @@
 
 		function loadPubsFromFourSquare(coords) {
 			venueDetails.length = 0;
-		
+			//4bf58dd8d48988d125941735 4d4b7105d754a06376d81259
 			 $.ajax({
 			    type: "GET",
 			    url: FSQ_URI+"venues/search?ll="+coords.latitude+","+coords.longitude
-					+"&categoryId=4d4b7105d754a06376d81259&oauth_token="+access_token+"&v="+version,
+					+"&categoryId=4bf58dd8d48988d125941735&oauth_token="+access_token+"&v="+version,
 			    data: "",
 			    dataType: "json",
 			    success: loadSuccess,
