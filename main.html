@@ -318,7 +318,7 @@
 			$("#mutualFriendsList").empty();
 			$("#mutualPlacesList").empty();
 			$("#mutualFollowingList").empty();
-			$("#profilePageTitle").html(" ");
+			$("#profilePageTitle").empty();
 
 			
 			function launchDisplay(){
@@ -347,14 +347,14 @@
 				if(profileFirstName = jsonData.response.user.firstName){
 					if(profileLastName = jsonData.response.user.lastName) {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + ' ' + profileLastName + '</h2><br>');
-						$("#profilePageTitle").html(profileFirstName + ' ' + profileLastName);
+						$("#profilePageTitle").append("<h1 >"+profileFirstName + ' ' + profileLastName+"</h1>");
 					} else {
 						$("#profileInfos").append('<h2 class="name">'+ profileFirstName + '</h2><br>');
-						$("#profilePageTitle").html(profileFirstName);
+						$("#profilePageTitle").append("<h1 >"+profileFirstName+"</h1>");
 					}
 				} else {
 					$("#profileInfos").append('<h2 class="name">'+ profileLastName + '</h2><br>');
-					$("#profilePageTitle").html(profileLastName);
+					$("#profilePageTitle").append("<h1 >"+profileLastName+"</h1>");
 				}
 				
 				// affichage de la ville
@@ -780,7 +780,7 @@
 
 	<div data-role="page" id="profilePage">
 		<div data-role="header" id="profilePageTitleDiv">
-			<h1 id="profilePageTitle"></h1>
+			<span id="profilePageTitle"></span>
 		</div>
 
 		<div data-role="content">
