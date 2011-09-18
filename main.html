@@ -123,6 +123,7 @@
 				});
 				$(sortVenues).each(function(i, e) {
 					venueList[e.id] = e;
+				if(e.hereNow.count != 0){
 					$("#places").append("<li venue-id='" + e.id 
 								+ "' id='gotoDetailLocalisation" + i + "' " + " venue-name='" + e.name + "'" 
 								+ " venue-address='" + e.location.address + " " + e.location.city + "'"
@@ -134,6 +135,7 @@
 						displayDetailLocalisation($(this).attr("venue-id"), $(this).attr("venue-name"), $(this).attr("venue-address"), $(this).attr("venue-distance") );
 					});
 					loadDetailLocalisation(e.id);
+				}
 				});
 				$("#places").listview('refresh');
 			}
