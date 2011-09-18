@@ -261,7 +261,10 @@
 			}
 		}
 
+
 		function chargerDetailProfile(profileID) {
+
+			var nbRequestInit = 8;
 			var profileFirstName;
 			var profileLastName;
 			var profileMayorships;
@@ -312,10 +315,16 @@
 			$("#profileNetworks").empty();
 			$("#mutualFriendsList").empty();
 			$("#mutualPlacesList").empty();
-			$("#mutualBadgesList").empty();
+			$("#mutualFollowingList").empty();
 			
+			function launchDisplay(){
+				nbRequestInit--;
+				if(nbRequestInit == 0){
+					displayPage();
+				}
+			}
 
-
+			
 			$.ajax({
 				type: "GET",
 				url: FSQ_URI+"users/" + profileID + "?oauth_token=" + access_token +"&v="+version,
@@ -406,10 +415,11 @@
 				});
 				function loadSuccessProfileDones(jsonData) {
 					profileDones = jsonData;
+					launchDisplay();
 				}
 				function loadErrorProfileDones(result) {
 					if (result.status == 200 && result.statusText == "OK") {
-				  	loadSuccessProfileDones(result.responseText);
+				  		loadSuccessProfileDones(result.responseText);
 				  }else {
 				  	alert("FAILED : " + result.status + ' ' + result.statusText);
 						errorProfileDones = true;
@@ -428,6 +438,7 @@
 				});
 				function loadSuccessUserDones(jsonData) {
 					userDones = jsonData;
+					launchDisplay();
 				}
 				function loadErrorUserDones(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -449,6 +460,7 @@
 				});
 				function loadSuccessProfileMayors(jsonData) {
 					profileMayorships = jsonData;
+					launchDisplay();
 				}
 				function loadErrorProfileMayors(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -471,6 +483,7 @@
 				});
 				function loadSuccessUserMayors(jsonData) {
 					userMayorships = jsonData;
+					launchDisplay();
 				}
 				function loadErrorUserMayors(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -492,6 +505,7 @@
 				});
 				function loadSuccessUserTodos(jsonData) {
 					userTodos = jsonData;
+					launchDisplay();
 				}
 				function loadErrorUserTodos(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -513,6 +527,8 @@
 				});
 				function loadSuccessProfileTips(jsonData) {
 					profileTips = jsonData;
+
+					launchDisplay();
 				}
 				function loadErrorProfileTips(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -535,6 +551,8 @@
 				});
 				function loadSuccessProfileFriends(jsonData) {
 					profileFriends = jsonData;
+
+					launchDisplay();
 				}
 				function loadErrorProfileFriends(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -556,6 +574,7 @@
 				});
 				function loadSuccessUserFriends(jsonData) {
 					userFriends = jsonData;
+					launchDisplay();
 				}
 				function loadErrorUserFriends(result) {
 					if (result.status == 200 && result.statusText == "OK") {
@@ -568,10 +587,7 @@
 				
 				
 
-
-				alert("WAIT");
-
-
+				function displayPage(){
 
 
 				// affichage des tips laissés par l'utilisateur et faits par le profil observé
@@ -721,6 +737,7 @@
 				} else {
 					$("#mutualFollowingList").append("You don't follow any page in common with " + profileFirstName);
 				}
+			}
 		}
 	</script>
 </head>
